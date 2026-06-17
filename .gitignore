@@ -1,0 +1,23 @@
+# Godot 4+ specific ignores
+.godot/
+
+# Godot-v3 style import cache (in case of legacy)
+.import/
+
+# Mono / C# (if used later)
+.mono/
+data_*/
+mono_crash.*.json
+
+# Export output
+/build/
+/export/
+*.exe
+*.pck
+*.zip
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*~
+*.tmp
