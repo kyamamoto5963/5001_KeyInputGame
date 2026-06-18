@@ -22,6 +22,7 @@
 | [08_world-vision.md](08_world-vision.md) | 全体ビジョン（世界観・マップ・進行・育成）※構想段階 | ドラフト |
 | [09_backlog.md](09_backlog.md) | 細かい要望・アイデア | ドラフト |
 | [10_philosophy.md](10_philosophy.md) | 正本へのポインタ＋固有の適応 | ドラフト |
+| [11_battle-spec.md](11_battle-spec.md) ★ | 戦闘仕様（盤面・流れ・状態遷移・強制移動）詳細 | ドラフト |
 
 ★ ＝ 契約レイヤ（小さく保ち、どのシーンの作業でも常に参照する）。
 
