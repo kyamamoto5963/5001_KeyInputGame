@@ -192,9 +192,9 @@ func _draw() -> void:
 	for unit in _mgr.units:
 		if unit.is_alive():
 			_draw_unit(unit)
-	# パリィリング（飛来攻撃の予告）。最後に重ねて描く。
+	# パリィナビ（飛来攻撃の予告）。最後に重ねて描く。
 	for inc in _mgr.parry.incoming:
-		_draw_parry_ring(inc)
+		_draw_parry_nav(inc)
 
 
 func _draw_unit(unit: BattleUnit) -> void:
@@ -237,9 +237,9 @@ func _draw_unit(unit: BattleUnit) -> void:
 	draw_rect(Rect2(hp_bg.position, Vector2(hp_bg.size.x * hp_ratio, hp_bg.size.y)), Color(0.4, 0.85, 0.4), true)
 
 
-## 飛来攻撃の予告リング。対象マスの中心に、基準円へ収束する外周リングを描く。
+## パリィナビ（飛来攻撃の予告）。対象マスの中心に、基準円へ収束する外周リングを描く。
 ## 重なる瞬間（外周≒基準円）に r(攻撃)/e(スキル) を押すと成功。
-func _draw_parry_ring(inc: ParrySystem.Incoming) -> void:
+func _draw_parry_nav(inc: ParrySystem.Incoming) -> void:
 	if not _mgr.grid.has_unit(inc.target.id):
 		return
 	var center := ORIGIN + Vector2(_mgr.grid.get_origin(inc.target.id)) * CELL_PX + Vector2(CELL_PX, CELL_PX) * 0.5
