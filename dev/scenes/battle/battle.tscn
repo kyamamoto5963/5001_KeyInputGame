@@ -13,3 +13,10 @@ offset_top = 24.0
 offset_right = 1120.0
 offset_bottom = 80.0
 text = "移動: jikl（矢印も可）"
+
+[node name="Result" type="Label" parent="UI"]
+offset_left = 48.0
+offset_top = 72.0
+offset_right = 700.0
+offset_bottom = 110.0
+text = "勝利！"

@@ -32,6 +32,18 @@ var atb: float = 0.0               # 0.0 .. ATB_FULL
 var atb_speed: float = 0.2         # 1（止まらない）秒あたりの蓄積量。キャラ＋スキル＋装備依存（今は仮値）。
 var state: State = State.WAIT
 
+# 戦闘ステータス
+var max_hp: int = 30
+var hp: int = 30
+var max_mana: int = 10
+var mana: int = 10
+var move_range: int = 3            # 1ターンに動けるマス数（メンバー固有・§2）
+var facing: int = 1               # 向き: -1=左 / +1=右（左右のみ・§6）
+
+# 編成: a/s/d/f に割り当てた4スキル（通常攻撃もスキル）。cool は各スロットの残りクールタイム。
+var loadout: Array[SkillData] = []
+var cool: Array[float] = []
+
 
 func _init(p_id: int, p_name: String, p_team: Team, p_atb_speed: float, p_atb_start: float = 0.0) -> void:
 	id = p_id
@@ -43,6 +55,14 @@ func _init(p_id: int, p_name: String, p_team: Team, p_atb_speed: float, p_atb_st
 
 func set_state(next: State) -> void:
 	state = next
+
+
+## 編成スキルを差す。cool をスロット数ぶん 0 で初期化する。
+func equip(skills: Array[SkillData]) -> void:
+	loadout = skills
+	cool = []
+	cool.resize(skills.size())
+	cool.fill(0.0)
 
 
 func is_alive() -> bool:
