@@ -1,16 +1,17 @@
 # 05 技術スタック（エンジン選定・構成）
 
 最終更新: 2026-06-18
-状態: エンジン決定（Godot 4）。プロジェクト構成・配信は着手時に具体化。
+状態: エンジン決定（Godot 4.6.1-stable）。バージョン・配置・git素材ポリシー確定。配信は着手時に具体化。
 
 ## 決定サマリ
 
 | 項目 | 決定 | 備考 |
 |---|---|---|
-| ゲームエンジン | **Godot 4**（最新安定版） | 無料・2D本職・Windows/Steam書き出し容易 |
+| ゲームエンジン | **Godot 4.6.1-stable**（win64） | 両拠点でこのバージョンに固定。無料・2D本職・Windows/Steam書き出し容易 |
+| プロジェクト配置 | リポジトリ直下 `dev/`（`dev/project.godot`） | docs と分離。`dev/.godot/` 等は .gitignore 済み |
 | スクリプト言語 | GDScript（基本） | 必要箇所のみ C#/GDExtension を検討（当面は不要見込み） |
 | 対象プラットフォーム | PC / Windows（Steam・itch 等） | 配信先確定は roadmap で |
-| バージョン管理 | git（リモート: GitHub `5001_KeyInputGame`） | R: ドライブの git 癖対応済み |
+| バージョン管理 | git（リモート: GitHub `5001_KeyInputGame`） | R: ドライブの git 癖対応済み。素材ポリシーは下記 |
 
 ## ADR-001: ゲームエンジンに Godot 4 を採用
 
@@ -37,20 +38,42 @@
   - 対策: **早い段階で小さく検証**（数体のキャラ＋背景1枚で、グリッド上に並べて違和感が無いか）。生成規格（解像度・余白・8方向有無）を先に決める。
   - 純 3D モデルを AI で安定生成するのは現状ハードルが高い。**スプライト主体**の方が AI 生成と相性が良い見込み。
 
-## プロジェクト構成（着手時に確定）
+## プロジェクト構成
 
-- Godot プロジェクト（`project.godot`）をリポジトリ直下 or `game/` 配下に作成（着手時に決定）。
+- Godot プロジェクト（`project.godot`）は **`dev/` 配下**に作成（docs と分離）。
 - シーン分割・疎結合（直接参照しない）を最初から：シーン間はシグナル／オートロード（共有データ・サービス）経由。
 - 入力はキー直書きせず **InputMap のアクション名**で参照（リマップ・コア制約の担保）。
 
+## git 素材ポリシー（2拠点でやりとりする前提）
+
+- **何を載せる**: ソース（`.gd`/`.tscn`/`.tres`）、設定（`project.godot`）、**アセット本体**（PNG スプライト・OGG/MP3 音）、
+  アセット横の **`*.import`**（Godot4 の取込設定。小さいテキスト＝コミットする）。
+- **載せない**（.gitignore 済み）: `.godot/`（インポートキャッシュ＝自動再生成）、書き出した `*.exe`/`*.pck`/`*.zip`。
+- **形式**: 画像は PNG、音は OGG/MP3 等の**圧縮形式**で。生 WAV/PSD/BMP は載せない。
+- **サイズの線引き**:
+  - **単一ファイル 100MB 超は GitHub が push をブロック**（硬い制限。50MB 超で警告）。1ファイルは数十MB以内に。
+  - リポジトリ全体は **1GB 以内が快適**（5GB 付近で GitHub 警告水準）。ドット絵中心なら長期間まったく余裕。
+- **git はバイナリ差分を取れず履歴に丸ごと積む** → 頻繁に上書きする巨大バイナリは避ける。たまに変える素材は気にしない。
+- **将来重くなったら Git LFS**（長尺 BGM・動画など）。ただし GitHub 無料 LFS は枠あり＋両拠点に git-lfs 必要。**今は不要**。
+- ⚠️ R: ドライブの **ENOSYS 誤検知**（AV）が特定バイナリのコミットでも出る可能性。出たら AV 誤検知を疑う
+  （本筋は `.git/` を AV スキャン除外 → [knowledge](../../5000_GamePhilosohy/knowledge/git_object-write-enosys-av-falsepositive.md)）。
+
+## 2拠点同期（家／会社）の手順
+
+- GitHub 経由で **push / pull** して同期（→ [environment.md](../../5000_GamePhilosohy/environment.md)）。
+- **クローンごとに R: ドライブの git 設定を入れ直す**（`.git/config` は git 管理外）:
+  `core.fsync none` / `core.fsyncObjectFiles false` / `core.createObject rename`。
+- **両拠点で Godot を 4.6.1-stable に固定**（バージョン差でインポート差が出るのを防ぐ）。
+- 別拠点で初めて開くと Godot が `.godot/` を**再生成**（アセット再インポート）。正常な挙動。
+
 ## 拠点依存（家／会社）
 
-- **Godot 本体のパスは拠点で異なる**（→ [environment.md](../../5000_GamePhilosohy/environment.md)）。
+- **Godot 本体のパスは拠点で異なる**（→ [environment.md](../../5000_GamePhilosohy/environment.md) の表が正）。
   絶対パスを埋め込まず、ビルド・実行の前にその場で確認する。
-- **要確認（会社）**: この拠点の Godot 4 実行ファイルのパス／バージョン。確定したら environment.md の表に追記。
+- 会社: `T:\tools\godot\Godot_v4.6.1-stable_win64.exe`（2026-06-18 確定）。
+- 自宅: **未確認**（次に自宅で作業するとき申告 → environment.md に追記）。
 
 ## 要確認
 
-- Godot プロジェクトの配置（直下か `game/` か）。
-- Godot のバージョン（4.x のどれで固定するか）。
+- 自宅の Godot 4.6.1 実行ファイルのパス。
 - Steam 配信の有無と時期（roadmap）。
