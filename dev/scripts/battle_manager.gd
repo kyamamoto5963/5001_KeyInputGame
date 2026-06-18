@@ -20,6 +20,8 @@ var grid := BattleGrid.new()
 var clock := PausableClock.new()
 var atb := ATBSystem.new()
 var skill := SkillSystem.new()
+var ai := EnemyAI.new()
+var rng := RandomNumberGenerator.new()
 var progress: Progress = Progress.RUNNING
 var units: Array[BattleUnit] = []
 
@@ -38,6 +40,7 @@ var victory: bool = false
 
 func _init() -> void:
 	atb.unit_became_active.connect(_on_unit_became_active)
+	rng.randomize()
 
 
 func add_unit(unit: BattleUnit, origin: Vector2i) -> void:
@@ -58,13 +61,17 @@ func process(real_delta: float) -> void:
 
 # --- フォーカス管理 -----------------------------------------------------
 func _on_unit_became_active(unit: BattleUnit) -> void:
+	if progress != Progress.RUNNING:
+		return  # 終了処理中などに満了が来ても行動させない（§0-5）
 	if unit.is_ally():
 		if unit not in _active_queue:
 			_active_queue.append(unit)  # 溜まった順に並べる
 	else:
-		# 敵: AI未実装 → 即パス（次ATBは20%へ）。後で敵AI（§8）に差し替える。
+		# 敵: その場で1ターンを完結（接近→攻撃 or パス）。判断はこの満了の瞬間だけ（§8）。
 		enemy_turn.emit(unit)
-		atb.reset_after_turn(unit, false)
+		var used := ai.take_turn(unit, units, grid, skill, rng)
+		atb.reset_after_turn(unit, used)  # 攻撃した=0% / パス=20%
+		_check_battle_end()
 
 
 ## フォーカス不在なら次のアクティブ味方へ回す。死亡/失効したフォーカスは外す。

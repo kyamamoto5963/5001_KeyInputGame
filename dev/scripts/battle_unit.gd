@@ -44,6 +44,9 @@ var facing: int = 1               # 向き: -1=左 / +1=右（左右のみ・§6
 var loadout: Array[SkillData] = []
 var cool: Array[float] = []
 
+# 敵の性格（敵のみ。味方は null）。→ EnemyAIData / §8
+var ai: EnemyAIData = null
+
 
 func _init(p_id: int, p_name: String, p_team: Team, p_atb_speed: float, p_atb_start: float = 0.0) -> void:
 	id = p_id

@@ -15,6 +15,7 @@ func _initialize() -> void:
 		_mk("helm_split", "兜割", 1, 3, 4.0, 22),
 		_mk("staff", "杖打ち", 1, 0, 1.0, 8),
 		_mk("fireball", "ファイアボール", 3, 4, 3.0, 18),
+		_mk("tackle", "体当たり", 1, 0, 1.5, 9),  # 雑魚の近接（敵用）
 	]
 	for s in skills:
 		var path: String = OUT_DIR + String(s.id) + ".tres"

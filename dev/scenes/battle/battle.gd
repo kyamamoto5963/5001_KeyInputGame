@@ -32,8 +32,11 @@ func _ready() -> void:
 	mahou.max_hp = 24; mahou.hp = 24; mahou.move_range = 2
 	mahou.equip([staff, fireball] as Array[SkillData])
 
+	var tackle := load("res://data/skills/tackle.tres") as SkillData
 	var zako := BattleUnit.new(2, "雑魚", BattleUnit.Team.ENEMY, 0.20)
 	zako.max_hp = 28; zako.hp = 28; zako.move_range = 3
+	zako.equip([tackle] as Array[SkillData])
+	zako.ai = load("res://data/ai/zako.tres") as EnemyAIData
 
 	_mgr.add_unit(kenshi, Vector2i(1, 1))
 	_mgr.add_unit(mahou, Vector2i(0, 0))
