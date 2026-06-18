@@ -12,12 +12,13 @@ func _initialize() -> void:
 
 	var atk := SkillData.ParryKind.ATTACK
 	var spell := SkillData.ParryKind.SKILL
+	# 引数: id, 表示名, 射程, マナ, クールタイム, ダメージ, パリィ種別, 硬直(アクション再生時間)
 	var skills := [
-		_mk("slash", "斬りつけ", 1, 0, 1.0, 12, atk),
-		_mk("helm_split", "兜割", 1, 3, 4.0, 22, atk),
-		_mk("staff", "杖打ち", 1, 0, 1.0, 8, atk),
-		_mk("fireball", "ファイアボール", 3, 4, 3.0, 18, spell),
-		_mk("tackle", "体当たり", 1, 0, 1.5, 9, atk),  # 雑魚の近接（敵用・r でパリィ）
+		_mk("slash", "斬りつけ", 1, 0, 1.0, 12, atk, 0.4),
+		_mk("helm_split", "兜割", 1, 3, 4.0, 22, atk, 0.8),
+		_mk("staff", "杖打ち", 1, 0, 1.0, 8, atk, 0.4),
+		_mk("fireball", "ファイアボール", 3, 4, 3.0, 18, spell, 0.7),
+		_mk("tackle", "体当たり", 1, 0, 1.5, 9, atk, 0.5),  # 雑魚の近接（敵用・r でパリィ）
 	]
 	for s in skills:
 		var path: String = OUT_DIR + String(s.id) + ".tres"
@@ -29,7 +30,7 @@ func _initialize() -> void:
 	quit()
 
 
-func _mk(id: String, disp: String, reach: int, mana: int, cool: float, dmg: int, parry_kind: SkillData.ParryKind) -> SkillData:
+func _mk(id: String, disp: String, reach: int, mana: int, cool: float, dmg: int, parry_kind: SkillData.ParryKind, recover: float) -> SkillData:
 	var s := SkillData.new()
 	s.id = id
 	s.display_name = disp
@@ -39,6 +40,7 @@ func _mk(id: String, disp: String, reach: int, mana: int, cool: float, dmg: int,
 	s.mana_cost = mana
 	s.cooltime = cool
 	s.parry_kind = parry_kind
+	s.recover_time = recover
 	var e := SkillEffect.new()
 	e.type = SkillEffect.Type.DAMAGE
 	e.amount = dmg

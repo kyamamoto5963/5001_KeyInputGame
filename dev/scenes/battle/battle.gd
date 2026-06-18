@@ -219,12 +219,16 @@ func _draw_unit(unit: BattleUnit) -> void:
 		draw_rect(Rect2(base + Vector2(1, 1), Vector2(CELL_PX - 2, CELL_PX - 2)),
 			Color(1.0, 0.3, 0.3), false, 4.0 if is_cur else 1.5)
 
-	# ATBバー（上）
+	# ATBバー（上）。硬直中はアクション再生＝ATB停止を灰色の進捗で示す。
 	var atb_bg := Rect2(base + Vector2(m, -ATB_BAR_H - HP_BAR_H - 5.0), Vector2(CELL_PX - 2.0 * m, ATB_BAR_H))
 	draw_rect(atb_bg, Color(0.18, 0.18, 0.22), true)
-	var atb_ratio := clampf(unit.atb / BattleUnit.ATB_FULL, 0.0, 1.0)
-	var atb_col := Color(0.3, 0.8, 1.0) if unit.state == BattleUnit.State.WAIT else Color(1.0, 0.85, 0.3)
-	draw_rect(Rect2(atb_bg.position, Vector2(atb_bg.size.x * atb_ratio, atb_bg.size.y)), atb_col, true)
+	if unit.state == BattleUnit.State.RECOVER:
+		var rec := 0.0 if unit.recover_total <= 0.0 else 1.0 - unit.recover_left / unit.recover_total
+		draw_rect(Rect2(atb_bg.position, Vector2(atb_bg.size.x * rec, atb_bg.size.y)), Color(0.5, 0.5, 0.55), true)
+	else:
+		var atb_ratio := clampf(unit.atb / BattleUnit.ATB_FULL, 0.0, 1.0)
+		var atb_col := Color(0.3, 0.8, 1.0) if unit.state == BattleUnit.State.WAIT else Color(1.0, 0.85, 0.3)
+		draw_rect(Rect2(atb_bg.position, Vector2(atb_bg.size.x * atb_ratio, atb_bg.size.y)), atb_col, true)
 
 	# HPバー（ATBの下）
 	var hp_bg := Rect2(base + Vector2(m, -HP_BAR_H - 3.0), Vector2(CELL_PX - 2.0 * m, HP_BAR_H))

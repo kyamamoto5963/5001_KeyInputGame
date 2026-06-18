@@ -11,6 +11,7 @@ amount = 22
 script = ExtResource("2_4fkmv")
 id = &"helm_split"
 display_name = "兜割"
+recover_time = 0.8
 mana_cost = 3
 cooltime = 4.0
 effects = Array[ExtResource("1_rki1k")]([SubResource("Resource_4fwm5")])

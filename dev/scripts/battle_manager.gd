@@ -75,7 +75,8 @@ func _on_unit_became_active(unit: BattleUnit) -> void:
 		# 敵: その場で1ターンを完結（接近→攻撃 or パス）。判断はこの満了の瞬間だけ（§8）。
 		enemy_turn.emit(unit)
 		var used := ai.take_turn(unit, units, grid, skill, rng, _perform_skill)
-		atb.reset_after_turn(unit, used)  # 攻撃した=0% / パス=20%
+		if not used:
+			atb.reset_pass(unit)  # パス=20%（スキル使用時の硬直は _perform_skill が設定済み）
 		_check_battle_end()
 
 
@@ -155,20 +156,22 @@ func cancel_targeting() -> void:
 	targets = []
 
 
-## 行動終了（パス・`w`）。スキル未使用なので used_skill=false（次ATB 20%・§1.5）。
+## 行動終了（パス・`w`）。スキル未使用 → 硬直なし・次ATB 20%（§1.5）。
 func end_turn() -> void:
 	if not _can_command():
 		return
-	_end_focus_turn(false)
+	var ending := focus
+	_clear_focus()
+	atb.reset_pass(ending)
 
 
 func _execute(slot: int, target: BattleUnit) -> void:
-	_perform_skill(focus, slot, target)
-	# スキルを使ったターン → ATB 0% で終了（§1.5）。
-	_end_focus_turn(true)
+	_perform_skill(focus, slot, target)  # ここで使用者は硬直(RECOVER)に入る
+	_clear_focus()
 
 
-## スキル発動の共通経路（味方・敵とも）。コストを確定し、効果を即時 or パリィ予告つきで放つ。
+## スキル発動の共通経路（味方・敵とも）。コストを確定し、効果を即時 or パリィ予告つきで放ち、
+## 使用者を硬直（RECOVER）へ。硬直中はATBが止まる（=アクション中は待機・§1.5）。
 ## 敵→味方の攻撃だけ予告（パリィ可能）にする。味方の攻撃や回復は即時（敵はパリィしない）。
 func _perform_skill(caster: BattleUnit, slot: int, target: BattleUnit) -> void:
 	var sdata := skill.slot_skill(caster, slot)
@@ -178,6 +181,7 @@ func _perform_skill(caster: BattleUnit, slot: int, target: BattleUnit) -> void:
 	else:
 		skill.apply_effects(caster, sdata, target, grid)
 		_check_battle_end()
+	atb.begin_recover(caster, sdata.recover_time)
 
 
 ## パリィ入力（kind=SkillData.ParryKind）。独立リアルタイムなのでターン状態に関係なく走る。
@@ -200,13 +204,12 @@ func _on_attack_parried(inc: ParrySystem.Incoming) -> void:
 	inc.target.atb = minf(BattleUnit.ATB_FULL, inc.target.atb + 0.1)
 
 
-func _end_focus_turn(used_skill: bool) -> void:
-	var ending := focus
+## フォーカスとターン入力状態を畳む（ATBの後始末は呼び出し側＝硬直 or パス）。
+func _clear_focus() -> void:
 	focus = null
 	turn_phase = TurnPhase.NONE
 	targets = []
 	selected_slot = -1
-	atb.reset_after_turn(ending, used_skill)  # ウェイトへ
 	focus_changed.emit(null)
 	# 次のアクティブへは次フレームの _ensure_focus が回す。
 

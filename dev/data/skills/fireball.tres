@@ -12,6 +12,7 @@ script = ExtResource("2_0kv8v")
 id = &"fireball"
 display_name = "ファイアボール"
 range = 3
+recover_time = 0.7
 mana_cost = 4
 cooltime = 3.0
 parry_kind = 1

@@ -11,5 +11,6 @@ amount = 8
 script = ExtResource("2_ny8vd")
 id = &"staff"
 display_name = "杖打ち"
+recover_time = 0.4
 cooltime = 1.0
 effects = Array[ExtResource("1_w5gkn")]([SubResource("Resource_wu4t5")])

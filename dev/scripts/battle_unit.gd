@@ -40,6 +40,10 @@ var mana: int = 10
 var move_range: int = 3            # 1ターンに動けるマス数（メンバー固有・§2）
 var facing: int = 1               # 向き: -1=左 / +1=右（左右のみ・§6）
 
+# 硬直（RECOVER状態）の残り/総時間。スキル発動後この間 ATB を止める（=アクション中は待機）。
+var recover_left: float = 0.0
+var recover_total: float = 0.0
+
 # 編成: a/s/d/f に割り当てた4スキル（通常攻撃もスキル）。cool は各スロットの残りクールタイム。
 var loadout: Array[SkillData] = []
 var cool: Array[float] = []

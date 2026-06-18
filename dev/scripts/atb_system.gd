@@ -27,8 +27,15 @@ func advance(dt: float) -> void:
 	if dt <= 0.0:
 		return
 	for unit in _units:
+		if unit.state == BattleUnit.State.RECOVER:
+			# 硬直中は ATB を止める（=アクション中は待機）。明けたらウェイトへ。
+			unit.recover_left -= dt
+			if unit.recover_left <= 0.0:
+				unit.recover_left = 0.0
+				unit.set_state(BattleUnit.State.WAIT)
+			continue
 		if unit.state != BattleUnit.State.WAIT:
-			continue  # アクティブ/行動中/死亡などは蓄積しない
+			continue  # アクティブ/死亡などは蓄積しない
 		unit.atb = minf(BattleUnit.ATB_FULL, unit.atb + unit.atb_speed * dt)
 		if unit.atb >= BattleUnit.ATB_FULL:
 			unit.atb = BattleUnit.ATB_FULL
@@ -36,8 +43,18 @@ func advance(dt: float) -> void:
 			unit_became_active.emit(unit)
 
 
-## 行動を終えたユニットをウェイトへ戻す。ATB再開位置は終わり方で変わる（§1.5）。
-## used_skill: スキルを使った=0%から / 使わず終了(パス)=20%から。
-func reset_after_turn(unit: BattleUnit, used_skill: bool) -> void:
-	unit.atb = 0.0 if used_skill else PASS_RESTART * BattleUnit.ATB_FULL
+## スキルを使ったユニットを硬直（RECOVER）へ。ATBは0でこの間止まり、明けてからWAITで蓄積開始（§1.5）。
+## recover_time<=0 なら即WAIT（0%から蓄積）。
+func begin_recover(unit: BattleUnit, recover_time: float) -> void:
+	unit.atb = 0.0
+	unit.recover_total = maxf(0.0, recover_time)
+	unit.recover_left = unit.recover_total
+	unit.set_state(BattleUnit.State.RECOVER if unit.recover_left > 0.0 else BattleUnit.State.WAIT)
+
+
+## スキル未使用で終了（パス）したユニットをウェイトへ。硬直なし・次ATBは20%から（§1.5）。
+func reset_pass(unit: BattleUnit) -> void:
+	unit.atb = PASS_RESTART * BattleUnit.ATB_FULL
+	unit.recover_left = 0.0
+	unit.recover_total = 0.0
 	unit.set_state(BattleUnit.State.WAIT)

@@ -16,6 +16,7 @@ enum ParryKind { ATTACK, SKILL }  # この攻撃を受けるパリィ種別（r=
 @export var shape_size: int = 1     # 直線N / 範囲N×N の N（今スライスは SINGLE のみ運用）
 @export var needs_direction: bool = false
 @export var cast_time: float = 0.0  # 0=即時。>0 は詠唱中を経る（今スライスは0のみ・§5未決定のため）
+@export var recover_time: float = 0.5  # 硬直＝アクション再生時間。発動後この間ATBは止まる（待機）
 @export var mana_cost: int = 0
 @export var cooltime: float = 0.0
 @export var parry_kind: ParryKind = ParryKind.ATTACK  # 通常攻撃=ATTACK(r) / 魔法等=SKILL(e)

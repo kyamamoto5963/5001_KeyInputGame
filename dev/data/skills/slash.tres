@@ -11,5 +11,6 @@ amount = 12
 script = ExtResource("2_xdkah")
 id = &"slash"
 display_name = "斬りつけ"
+recover_time = 0.4
 cooltime = 1.0
 effects = Array[ExtResource("1_q5137")]([SubResource("Resource_h77mp")])

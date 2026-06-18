@@ -13,7 +13,7 @@ func _initialize() -> void:
 
 	var ally := BattleUnit.new(0, "ally", BattleUnit.Team.ALLY, 1.0)  # 満了1.0s
 	ally.max_hp = 30; ally.hp = 30; ally.max_mana = 10; ally.mana = 10; ally.move_range = 5
-	ally.equip([_slash(12, 1, 0, 0.5)] as Array[SkillData])
+	ally.equip([_slash(12, 1, 0, 0.5, 0.3)] as Array[SkillData])
 
 	var enemy := BattleUnit.new(1, "enemy", BattleUnit.Team.ENEMY, 0.001)  # ほぼ動かない
 	enemy.max_hp = 20; enemy.hp = 20
@@ -42,11 +42,16 @@ func _initialize() -> void:
 	_check(mgr.turn_phase == BattleManager.TurnPhase.TARGETING and mgr.targets.size() == 1, "対象候補1体")
 	mgr.confirm_target()
 	_check(enemy.hp == 8, "ダメージ適用 20-12=8")
-	_check(ally.state == BattleUnit.State.WAIT and is_equal_approx(ally.atb, 0.0), "スキル使用→ATB0%でウェイト")
+	_check(ally.state == BattleUnit.State.RECOVER and is_equal_approx(ally.atb, 0.0), "スキル使用→硬直(RECOVER)でATB停止")
+	_check(ally.recover_left > 0.0, "硬直時間が入る")
 	_check(ally.cool[0] > 0.0, "クールタイムが入る")
 
-	# クールタイム経過＋再蓄積でフォーカスが戻り、2撃目で撃破→勝利。
-	_run(mgr, 1.1, 0.05)
+	# 硬直中（0.3のうち0.2経過）はATBが溜まらない＝アクション中は待機。
+	_run(mgr, 0.2, 0.05)
+	_check(ally.state == BattleUnit.State.RECOVER and is_equal_approx(ally.atb, 0.0), "硬直中はATBが進まない")
+
+	# 硬直明け＋再蓄積でフォーカスが戻り、2撃目で撃破→勝利。
+	_run(mgr, 1.45, 0.05)
 	_check(mgr.focus == ally, "再びフォーカス")
 	_check(is_equal_approx(ally.cool[0], 0.0), "クールタイムが明けている")
 	_check(mgr.select_skill(0), "2撃目を選択")
@@ -61,7 +66,7 @@ func _initialize() -> void:
 	quit(0 if _fail == 0 else 1)
 
 
-func _slash(dmg: int, reach: int, mana: int, cool: float) -> SkillData:
+func _slash(dmg: int, reach: int, mana: int, cool: float, recover: float) -> SkillData:
 	var s := SkillData.new()
 	s.id = "slash"
 	s.display_name = "slash"
@@ -69,6 +74,7 @@ func _slash(dmg: int, reach: int, mana: int, cool: float) -> SkillData:
 	s.range = reach
 	s.mana_cost = mana
 	s.cooltime = cool
+	s.recover_time = recover
 	var e := SkillEffect.new()
 	e.type = SkillEffect.Type.DAMAGE
 	e.amount = dmg
