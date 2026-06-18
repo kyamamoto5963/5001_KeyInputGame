@@ -1,0 +1,25 @@
+; Engine configuration file.
+; Godot 4.6.1-stable / win64（→ ../docs/05_tech-stack.md）
+; 詳細な書式は Godot エディタが管理する。手で増やす項目は最小限に。
+
+config_version=5
+
+[application]
+
+config/name="KeyInputGame"
+config/description="キーボードだけで完結する ATB タクティクス（縦スライス）"
+run/main_scene="res://scenes/battle/battle.tscn"
+config/features=PackedStringArray("4.6", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+; 入力定義は InputMap をコードで構築する（→ ../docs/06_systems.md 入力定義）。
+InputActions="*res://autoload/input_actions.gd"
+; シーン間共有データの単一窓口（→ ../docs/06_systems.md / 04_data-save）。
+GameState="*res://autoload/game_state.gd"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
