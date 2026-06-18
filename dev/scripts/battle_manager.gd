@@ -13,14 +13,16 @@ enum Progress { RUNNING, PAUSED, ENDING }
 enum TurnPhase { NONE, COMMAND, TARGETING }
 
 signal focus_changed(unit: BattleUnit)  # 引数 null = フォーカスなし
-signal enemy_turn(unit: BattleUnit)     # 敵がアクティブ化（今はAI未実装→即パス）
+signal enemy_turn(unit: BattleUnit)     # 敵がアクティブ化
 signal battle_ended(victory: bool)
+signal parry_feedback(success: bool, combo: int)  # パリィ入力の結果（HUD用）
 
 var grid := BattleGrid.new()
 var clock := PausableClock.new()
 var atb := ATBSystem.new()
 var skill := SkillSystem.new()
 var ai := EnemyAI.new()
+var parry := ParrySystem.new()
 var rng := RandomNumberGenerator.new()
 var progress: Progress = Progress.RUNNING
 var units: Array[BattleUnit] = []
@@ -40,6 +42,8 @@ var victory: bool = false
 
 func _init() -> void:
 	atb.unit_became_active.connect(_on_unit_became_active)
+	parry.attack_hit.connect(_on_attack_hit)
+	parry.attack_parried.connect(_on_attack_parried)
 	rng.randomize()
 
 
@@ -55,6 +59,7 @@ func process(real_delta: float) -> void:
 	if progress != Progress.RUNNING:
 		return  # PAUSED / ENDING は完全凍結（dt も 0 だが二重に守る）
 	skill.tick_cooltimes(units, dt)
+	parry.update(dt)  # 飛来攻撃の予告を進め、着弾を解決（パリィは常時ライブ・§1.5）
 	atb.advance(dt)
 	_ensure_focus()
 
@@ -69,7 +74,7 @@ func _on_unit_became_active(unit: BattleUnit) -> void:
 	else:
 		# 敵: その場で1ターンを完結（接近→攻撃 or パス）。判断はこの満了の瞬間だけ（§8）。
 		enemy_turn.emit(unit)
-		var used := ai.take_turn(unit, units, grid, skill, rng)
+		var used := ai.take_turn(unit, units, grid, skill, rng, _perform_skill)
 		atb.reset_after_turn(unit, used)  # 攻撃した=0% / パス=20%
 		_check_battle_end()
 
@@ -158,10 +163,41 @@ func end_turn() -> void:
 
 
 func _execute(slot: int, target: BattleUnit) -> void:
-	skill.execute(focus, slot, target, units, grid)
+	_perform_skill(focus, slot, target)
 	# スキルを使ったターン → ATB 0% で終了（§1.5）。
 	_end_focus_turn(true)
+
+
+## スキル発動の共通経路（味方・敵とも）。コストを確定し、効果を即時 or パリィ予告つきで放つ。
+## 敵→味方の攻撃だけ予告（パリィ可能）にする。味方の攻撃や回復は即時（敵はパリィしない）。
+func _perform_skill(caster: BattleUnit, slot: int, target: BattleUnit) -> void:
+	var sdata := skill.slot_skill(caster, slot)
+	skill.commit_cost(caster, slot, target, grid)
+	if target != null and not caster.is_ally() and target.is_ally():
+		parry.spawn(caster, target, sdata, sdata.parry_kind)  # 予告つき＝プレイヤーがパリィ可能
+	else:
+		skill.apply_effects(caster, sdata, target, grid)
+		_check_battle_end()
+
+
+## パリィ入力（kind=SkillData.ParryKind）。独立リアルタイムなのでターン状態に関係なく走る。
+func try_parry(kind: int) -> bool:
+	if progress != Progress.RUNNING:
+		return false
+	var ok := parry.try_parry(kind)
+	parry_feedback.emit(ok, parry.combo)
+	return ok
+
+
+func _on_attack_hit(inc: ParrySystem.Incoming) -> void:
+	skill.apply_effects(inc.caster, inc.skill, inc.target, grid)  # 着弾＝ダメージ適用
 	_check_battle_end()
+
+
+func _on_attack_parried(inc: ParrySystem.Incoming) -> void:
+	# 成功効果: ノーダメージ＋見返り。今はマナ回復＋ATB微加速（キャラ別差は後続・§7）。
+	inc.target.mana = mini(inc.target.max_mana, inc.target.mana + 2)
+	inc.target.atb = minf(BattleUnit.ATB_FULL, inc.target.atb + 0.1)
 
 
 func _end_focus_turn(used_skill: bool) -> void:

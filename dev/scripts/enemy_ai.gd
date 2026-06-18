@@ -9,12 +9,14 @@ extends RefCounted
 ##  3) それでも撃てなければパス。
 ## 戻り値: スキルを使ったか（true=ATB0% / false=パス20%）。
 
-func take_turn(unit: BattleUnit, units: Array[BattleUnit], grid: BattleGrid, skill: SkillSystem, rng: RandomNumberGenerator) -> bool:
+## perform は BattleManager._perform_skill(caster, slot, target)。実際の発動は委ねる
+## （即時 or パリィ予告つきの振り分けは Manager 側）。AI は「どのスキルを誰に」だけ決める。
+func take_turn(unit: BattleUnit, units: Array[BattleUnit], grid: BattleGrid, skill: SkillSystem, rng: RandomNumberGenerator, perform: Callable) -> bool:
 	var data := unit.ai
 	if data == null:
 		return false  # AI未設定 → パス
 
-	if _try_attack(unit, units, grid, skill, data, rng):
+	if _try_attack(unit, units, grid, skill, data, rng, perform):
 		return true
 
 	match data.fallback_policy:
@@ -26,11 +28,11 @@ func take_turn(unit: BattleUnit, units: Array[BattleUnit], grid: BattleGrid, ski
 			pass
 
 	# 移動して射程に入ったら撃つ。
-	return _try_attack(unit, units, grid, skill, data, rng)
+	return _try_attack(unit, units, grid, skill, data, rng, perform)
 
 
 # --- 攻撃 ---------------------------------------------------------------
-func _try_attack(unit: BattleUnit, units: Array[BattleUnit], grid: BattleGrid, skill: SkillSystem, data: EnemyAIData, rng: RandomNumberGenerator) -> bool:
+func _try_attack(unit: BattleUnit, units: Array[BattleUnit], grid: BattleGrid, skill: SkillSystem, data: EnemyAIData, rng: RandomNumberGenerator, perform: Callable) -> bool:
 	var slot := _pick_usable_slot(unit, units, grid, skill, rng)
 	if slot == SkillSystem.NO_SLOT:
 		return false
@@ -38,7 +40,7 @@ func _try_attack(unit: BattleUnit, units: Array[BattleUnit], grid: BattleGrid, s
 	var target := _pick_target(unit, sdata, units, grid, skill, data, rng)
 	if target == null:
 		return false
-	skill.execute(unit, slot, target, units, grid)
+	perform.call(unit, slot, target)
 	return true
 
 

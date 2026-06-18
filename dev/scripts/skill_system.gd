@@ -54,20 +54,30 @@ func valid_targets(caster: BattleUnit, skill: SkillData, units: Array[BattleUnit
 	return out
 
 
-## スキルを実行し、結果（倒した対象など）を返す。target は自己/全体なら null。
-func execute(caster: BattleUnit, slot: int, target: BattleUnit, units: Array[BattleUnit], grid: BattleGrid) -> Dictionary:
+## スキル発動の確定処理: マナ消費・クールタイム・向き合わせ（効果適用は含まない）。
+## パリィ予告つき攻撃では「発動＝コスト確定」だけ先に行い、効果は着弾時に apply_effects で適用する。
+func commit_cost(caster: BattleUnit, slot: int, target: BattleUnit, grid: BattleGrid) -> void:
 	var skill := slot_skill(caster, slot)
-	var result := {"killed": []}
-	# 向きを対象側へ自動で合わせる（左右のみ）。
 	if target != null:
 		var dx := grid.get_origin(target.id).x - grid.get_origin(caster.id).x
 		if dx != 0:
-			caster.facing = 1 if dx > 0 else -1
-	for eff in skill.effects:
-		_apply_effect(eff, caster, target, grid, result)
+			caster.facing = 1 if dx > 0 else -1  # 向きを対象側へ（左右のみ）
 	caster.mana -= skill.mana_cost
 	caster.cool[slot] = skill.cooltime
+
+
+## スキルの効果（ダメージ等）を適用する。着弾の瞬間に呼ぶ。倒した対象などを返す。
+func apply_effects(caster: BattleUnit, skill: SkillData, target: BattleUnit, grid: BattleGrid) -> Dictionary:
+	var result := {"killed": []}
+	for eff in skill.effects:
+		_apply_effect(eff, caster, target, grid, result)
 	return result
+
+
+## 即時スキル（コスト確定＋効果適用を一括）。target は自己/全体なら null。
+func execute(caster: BattleUnit, slot: int, target: BattleUnit, units: Array[BattleUnit], grid: BattleGrid) -> Dictionary:
+	commit_cost(caster, slot, target, grid)
+	return apply_effects(caster, slot_skill(caster, slot), target, grid)
 
 
 func _apply_effect(eff: SkillEffect, caster: BattleUnit, target: BattleUnit, grid: BattleGrid, result: Dictionary) -> void:

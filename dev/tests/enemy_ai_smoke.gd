@@ -24,20 +24,18 @@ func _initialize() -> void:
 	mgr.add_unit(ally, Vector2i(0, 0))
 	mgr.add_unit(enemy, Vector2i(6, 0))
 
-	# 最初の敵ターンまで（atb満了1.0s）進める。接近して隣接、攻撃まで入るはず。
+	# 最初の敵ターンまで（atb満了1.0s）進める。接近して隣接するはず。
 	_run(mgr, 1.05, 0.05)
 	var ex := mgr.grid.get_origin(1).x
 	_check(ex < 6, "敵が味方へ接近した（x=%d < 6）" % ex)
 	_check(mgr.grid.get_origin(1) != Vector2i(0, 0), "味方マスには重ならない")
-	_check(ally.hp < 20, "味方が攻撃を受けてHPが減る（hp=%d）" % ally.hp)
-	var hp_after_first := ally.hp
 
-	# さらに進めると追撃で削られていく。
-	_run(mgr, 1.5, 0.05)
-	_check(ally.hp < hp_after_first or not ally.is_alive(), "追撃でさらに削れる/撃破")
+	# 敵の攻撃はパリィ予告（約1秒）を経て着弾する。パリィしなければダメージが入る。
+	_run(mgr, 1.2, 0.05)
+	_check(ally.hp < 20, "予告を経て攻撃が着弾しHPが減る（hp=%d）" % ally.hp)
 
-	# 味方全滅まで進める → 敗北で凍結。
-	_run(mgr, 8.0, 0.05)
+	# 味方全滅まで進める → 敗北で凍結（予告ぶん時間がかかるので余裕を見る）。
+	_run(mgr, 16.0, 0.05)
 	_check(not ally.is_alive(), "味方が倒れる")
 	_check(mgr.progress == BattleManager.Progress.ENDING and not mgr.victory, "敗北でENDING（victory=false）")
 
