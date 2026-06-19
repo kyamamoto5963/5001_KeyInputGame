@@ -4,7 +4,7 @@ extends Node2D
 ##
 ## ターン入力フロー（→ 06_systems）: 移動 → スキル(a/s/d/f) → ターゲット → 決定。
 ##   COMMAND  : 移動キーで移動範囲内を動く。a/s/d/f でスキル選択。W で行動終了(パス)。
-##   TARGETING: 移動キーで対象カーソル送り。Enter で確定、Esc で戻る。
+##   TARGETING: 移動キーで対象カーソル送り。起動したスキルキー(a/s/d/f)再押し or Enter で確定、Esc で戻る。
 ## P でポーズ（全凍結）。敵はAI未実装なので満了即パス。決着後は Enter でリトライ。
 
 const CELL_PX := 64
@@ -114,7 +114,8 @@ func _handle_command(event: InputEvent) -> bool:
 
 
 func _handle_targeting(event: InputEvent) -> bool:
-	if event.is_action_pressed(InputActions.CONFIRM):
+	# 起動したスキルキーをもう一度押すと確定（a で選択→a で使用、s なら s）。Enter/Space も併用可。
+	if _is_selected_skill_key(event) or event.is_action_pressed(InputActions.CONFIRM):
 		_mgr.confirm_target()
 		return true
 	if event.is_action_pressed(InputActions.CANCEL):
@@ -124,6 +125,16 @@ func _handle_targeting(event: InputEvent) -> bool:
 	if step != 0:
 		_mgr.cycle_target(step)
 		return true
+	return false
+
+
+## TARGETING 中、選択中スロットに対応するスキルキーが押されたか（a/s/d/f → 0/1/2/3）。
+func _is_selected_skill_key(event: InputEvent) -> bool:
+	match _mgr.selected_slot:
+		0: return event.is_action_pressed(InputActions.SKILL_A)
+		1: return event.is_action_pressed(InputActions.SKILL_S)
+		2: return event.is_action_pressed(InputActions.SKILL_D)
+		3: return event.is_action_pressed(InputActions.SKILL_F)
 	return false
 
 
@@ -165,7 +176,12 @@ func _update_info() -> void:
 		_info.text = "[%s] フォーカス待ち ｜ 移動:%s(矢印可) / P:ポーズ%s" % [prog, GameState.movement_layout, pinfo]
 		return
 	var u := _mgr.focus
-	var phase: String = "ターゲット選択(Enter確定/Esc戻る)" if _mgr.turn_phase == BattleManager.TurnPhase.TARGETING else "コマンド(移動/a s d f/W終了)"
+	var phase: String
+	if _mgr.turn_phase == BattleManager.TurnPhase.TARGETING:
+		var key: String = ["a", "s", "d", "f"][_mgr.selected_slot] if _mgr.selected_slot >= 0 else "Enter"
+		phase = "ターゲット選択(%s/Enterで確定 Escで戻る)" % key
+	else:
+		phase = "コマンド(移動/a s d f/W終了)"
 	_info.text = "[%s] %s HP%d/%d MP%d/%d 残移動%d ｜ %s ｜ %s%s" % [
 		prog, u.display_name, u.hp, u.max_hp, u.mana, u.max_mana, _mgr.move_left,
 		_slots_text(u), phase, pinfo,
