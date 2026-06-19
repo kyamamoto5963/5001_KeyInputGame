@@ -1,6 +1,7 @@
 ; Engine configuration file.
-; Godot 4.6.1-stable / win64（→ ../docs/05_tech-stack.md）
+; Godot 4.7-stable / win64（→ ../docs/05_tech-stack.md）
 ; 詳細な書式は Godot エディタが管理する。手で増やす項目は最小限に。
+; ※エディタで保存するとこの先頭コメント等は Godot に書き換えられることがある。
 
 config_version=5
 
@@ -9,7 +10,7 @@ config_version=5
 config/name="KeyInputGame"
 config/description="キーボードだけで完結する ATB タクティクス（縦スライス）"
 run/main_scene="res://scenes/battle/battle.tscn"
-config/features=PackedStringArray("4.6", "GL Compatibility")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
