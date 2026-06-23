@@ -15,7 +15,7 @@ const MOVE_DOWN := "move_down"
 const MOVE_LEFT := "move_left"
 const MOVE_RIGHT := "move_right"
 
-const FACE := "face"                 # Q: 向き変更モード
+const FACE := "face"                 # Q: 方向転換
 const END_TURN := "end_turn"         # W: 行動終了（パス）
 const PARRY_SKILL := "parry_skill"   # E: スキルパリィ
 const PARRY_ATTACK := "parry_attack" # R: 攻撃パリィ
