@@ -14,7 +14,7 @@ extends Node2D
 const CELL_PX := 64
 const ORIGIN := Vector2(48, 180)
 const MOVE_STEPS := 3          # 仮（メンバー固有の move_steps）
-const MOVE_TIME := 1.0         # 1マス/秒（要調整）
+const MOVE_TIME := 0.5         # 0.5秒/マス（要調整）
 const FACE_BEAT := 0.15        # 方向転換の見せ間
 const SKILL_FLASH := 0.4       # スキル発動マーカーの表示時間
 
