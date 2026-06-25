@@ -4,7 +4,7 @@ extends Node2D
 ##
 ## 操作:
 ##   移動キー(jikl/矢印): 1キー=1歩スタックに積む（移動歩数=3まで）。青カーソルが進む（押した歩数で数える）。
-##   q → 左右           : 方向転換（黄カーソル）。向きだけ変える。ターンは終了しない。
+##   q → 左右           : 方向転換（黄カーソル）。向きを変える。**1行動ポイント消費**（移動と共有）。ターンは終了しない。
 ##   a → (左右上下) → a : 隣接マス選択スキル（赤カーソル）。初期照準は現在の向き側。a再押し/Enterで確定＝ターン締め。
 ##   w                  : 行動終了（パス）。今のスタックをそのまま実行。
 ##   Esc/Back           : サブモード解除 ／ MOVE中は直前の入力を取り消し。
@@ -67,6 +67,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _input_move(event: InputEvent) -> void:
 	if event.is_action_pressed(InputActions.FACE):
+		if _points_used() >= MOVE_STEPS:
+			_hint = "行動ポイントの上限（%d）" % MOVE_STEPS
+			return
 		_phase = Phase.FACE
 		_hint = ""
 		return
@@ -83,8 +86,8 @@ func _input_move(event: InputEvent) -> void:
 		return
 	var dir := _read_dir(event)
 	if dir != Vector2i.ZERO:
-		if _move_count() >= MOVE_STEPS:
-			_hint = "移動歩数の上限（%d歩）" % MOVE_STEPS
+		if _points_used() >= MOVE_STEPS:
+			_hint = "行動ポイントの上限（%d）" % MOVE_STEPS
 			return
 		if not _in_bounds(_cursor + dir):
 			_hint = "盤外"
@@ -200,6 +203,15 @@ func _move_count() -> int:
 	return n
 
 
+## 行動ポイント消費数。移動も方向転換も同じバジェット(MOVE_STEPS)を食う（q=1pt）。
+func _points_used() -> int:
+	var n := 0
+	for e in _stack:
+		if e["type"] == "move" or e["type"] == "face":
+			n += 1
+	return n
+
+
 func _read_dir(event: InputEvent) -> Vector2i:
 	if event.is_action_pressed(InputActions.MOVE_UP): return Vector2i(0, -1)
 	if event.is_action_pressed(InputActions.MOVE_DOWN): return Vector2i(0, 1)
@@ -289,10 +301,10 @@ func _update_labels() -> void:
 	var phase_txt := ""
 	match _phase:
 		Phase.MOVE: phase_txt = "移動（青）"
-		Phase.FACE: phase_txt = "方向転換（黄）: 左右で向き"
+		Phase.FACE: phase_txt = "方向転換（黄, 1pt消費）: 左右で向き"
 		Phase.SKILL: phase_txt = "スキル照準（赤）: 左右上下で照準 → a再押し/Enterで発動"
 		Phase.EXECUTING: phase_txt = "実行中…"
-	var head := "[%s] 向き:%s  残歩数:%d/%d" % [phase_txt, face_txt, MOVE_STEPS - _move_count(), MOVE_STEPS]
+	var head := "[%s] 向き:%s  残ポイント:%d/%d" % [phase_txt, face_txt, MOVE_STEPS - _points_used(), MOVE_STEPS]
 	if _phase == Phase.MOVE or _phase == Phase.FACE:
 		head += "  (確定後の向き:%s)" % pf_txt
 	if _hint != "":
