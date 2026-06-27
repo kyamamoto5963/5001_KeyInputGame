@@ -9,17 +9,20 @@ class_name CutoutCharacter
 const DEFAULT_DIR := "res://assets/char/char_001/"
 
 # 二次モーション（胸の揺れ・スプリングボーン近似 → docs/12 §5.3-jiggle）
-const JIG_STIFF := 110.0     # 戻る強さ（高い=速い揺れ）
-const JIG_DAMP := 6.0        # 減衰（高い=すぐ収束）
-const JIG_DRIVE := 0.035     # 本体加速度→揺れ の効き
-const JIG_MAX := 9.0         # 揺れ幅クランプ(px・未スケール)
-const JIG_SQUASH := 0.018    # 縦揺れの伸縮量
+const JIG_STIFF := 70.0      # 戻る強さ（低い=ゆったり大きく揺れる）
+const JIG_DAMP := 3.2        # 減衰（低い=ぷるんと長く揺れる）
+const JIG_DRIVE := 0.06      # 本体加速度→揺れ の効き
+const JIG_MAX := 26.0        # 揺れ幅クランプ(px・未スケール)
+const JIG_SQUASH := 0.05     # 縦揺れの伸縮量（大きい=よく伸び縮み）
+const JIG_ATTACK_IMPULSE := 60.0  # 攻撃時のバウンス強さ
 
 var display_scale := 2.0
 var _rig: Node2D                        # 倍率・左右反転をまとめる入れ物
 var _hip: Node2D
 var _chest: Node2D
 var _neck: Node2D
+var _chest_rest := Vector2.ZERO         # 胸ボーンの基準位置（揺れはここからのオフセット）
+var _bones := {}                        # リグ方式: name -> Node2D（legacyでは空）
 var _sprites := {}
 var _joints := {}                       # name -> 元キャンバス座標(Vector2)
 var _facing := 1                        # +1=右 / -1=左
@@ -64,6 +67,7 @@ func build(dir := DEFAULT_DIR, scale := 2.0) -> bool:
 	_hip = _make_bone(_rig, _joints["waist"], _joints["feet"])
 	_chest = _make_bone(_hip, _joints["waist"], _joints["waist"])
 	_neck = _make_bone(_chest, _joints["neck"], _joints["waist"])
+	_chest_rest = _chest.position
 
 	_sprites["skirt"] = _make_sprite(_hip, dir, parts["skirt"], _joints["waist"])
 	_sprites["torso"] = _make_sprite(_chest, dir, parts["torso"], _joints["waist"])
@@ -72,6 +76,77 @@ func build(dir := DEFAULT_DIR, scale := 2.0) -> bool:
 	_content_top = _joints["feet"].y
 	for p in parts.values():
 		_content_top = min(_content_top, float(p["offset"][1]))
+
+	_built = true
+	return true
+
+
+## スケルトン＋キャラデータからフルボーン・リグを組む（→ docs/12）。成功で true。
+## skeleton_path: humanoid_v1.json / character_path: data/characters/<name>.json
+func build_rig(skeleton_path: String, character_path: String, scale := 1.0) -> bool:
+	display_scale = scale
+	var skel := _load_json(skeleton_path)
+	var char := _load_json(character_path)
+	if skel.is_empty() or char.is_empty():
+		push_error("skeleton/character を読めません: %s / %s" % [skeleton_path, character_path])
+		return false
+
+	_art_facing = signi(int(char.get("art_facing", 1)))
+	if _art_facing == 0:
+		_art_facing = 1
+	var bones_def: Dictionary = skel["bones"]
+	var slots_def: Dictionary = skel.get("slots", {})
+	var feet_pos := _v2(bones_def["feet"]["pos"])
+	_joints = {"feet": feet_pos}
+
+	_rig = Node2D.new()
+	add_child(_rig)
+	_apply_rig_transform()
+
+	# ボーン生成（親→子の順）。各ボーン位置 = 自pos − 親pos（root親=feet）。
+	_bones = {}
+	for name in _topo_order(bones_def):
+		var bd: Dictionary = bones_def[name]
+		var parent_name: Variant = bd.get("parent", null)
+		var parent_node: Node2D = _rig if parent_name == null else _bones[parent_name]
+		var parent_pos := feet_pos if parent_name == null else _v2(bones_def[parent_name]["pos"])
+		var b := Node2D.new()
+		b.position = _v2(bd["pos"]) - parent_pos
+		parent_node.add_child(b)
+		_bones[name] = b
+
+	_hip = _bones.get("hip")
+	_chest = _bones.get("chest")
+	_neck = _bones.get("neck")
+	if _chest != null:
+		_chest_rest = _chest.position
+
+	# パーツ配置（anchor をボーン原点へ合わせる。z でレイヤ順、tint で色替え）
+	_content_top = feet_pos.y
+	var tint: Dictionary = char.get("tint", {})
+	var parts: Dictionary = char["parts"]
+	for slot in parts:
+		var idv: Variant = parts[slot]
+		if idv == null or str(idv) == "":
+			continue
+		var pj := _load_json("res://assets/char/parts/%s/%s.json" % [slot, idv])
+		if pj.is_empty():
+			continue
+		var attach := str(pj.get("attach", slots_def.get(slot, {}).get("attach", "")))
+		if not _bones.has(attach):
+			push_warning("未知のattachボーン: %s (slot=%s)" % [attach, slot])
+			continue
+		var anchor := _v2(pj["anchor"])
+		var s := Sprite2D.new()
+		s.texture = load("res://assets/char/parts/%s/%s.png" % [slot, idv])
+		s.centered = false
+		s.position = -anchor
+		s.z_index = int(pj.get("z", slots_def.get(slot, {}).get("z", 0)))
+		if tint.has(slot):
+			s.modulate = Color(str(tint[slot]))
+		_bones[attach].add_child(s)
+		_sprites[slot] = s
+		_content_top = min(_content_top, _v2(bones_def[attach]["pos"]).y - anchor.y)
 
 	_built = true
 	return true
@@ -99,7 +174,7 @@ func set_display_scale(s: float) -> void:
 func play_attack() -> void:
 	if not _built:
 		return
-	_jig_v += Vector2(0.0, 22.0)   # 攻撃で胸にバウンスのインパルス
+	_jig_v += Vector2(0.0, JIG_ATTACK_IMPULSE)   # 攻撃で胸にバウンスのインパルス
 	var tw := create_tween()
 	tw.tween_property(self, "_lean", 1.0, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(self, "_lean", 0.0, 0.28).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
@@ -123,11 +198,12 @@ func _process(delta: float) -> void:
 	# 揺れ: 縦成分=スカッシュ＋上下、横成分=左右オフセット＋わずかな傾き
 	var squash := _jig.y * JIG_SQUASH
 	_chest.scale = Vector2(1.0 - squash, 1.0 + breathe * 0.015 + squash)
-	_chest.position = Vector2(_jig.x * 0.5, _jig.y * 0.5)
+	_chest.position = _chest_rest + Vector2(_jig.x * 0.5, _jig.y * 0.5)
 	var lean_rot := deg_to_rad(_lean * -16.0)   # 反転は _rig のミラーが面倒を見る
 	_chest.rotation = deg_to_rad(breathe * 1.2) + lean_rot + deg_to_rad(_jig.x * 0.4)
 	_neck.rotation = deg_to_rad(sin(_t * 2.2 + 0.7) * 2.2) + lean_rot * 0.6
 	_hip.rotation = deg_to_rad(sin(_t * 1.6) * 0.8)
+	_animate_limbs(lean_rot)
 
 
 ## 本体ボーンの加速度を入力に、胸ボーンをバネ-ダンパで遅れて揺らす（半暗黙オイラー）。
@@ -142,7 +218,45 @@ func _update_jiggle(delta: float) -> void:
 	_prev_v = v
 	_jig_v += (-JIG_STIFF * _jig - JIG_DAMP * _jig_v) * delta
 	_jig_v += -a * JIG_DRIVE     # 慣性: 本体が動くと胸は逆向きに遅れる
+	_jig_v.y += cos(_t * 2.2) * 14.0 * delta   # 呼吸に同期した待機中の微揺れ
 	_jig = (_jig + _jig_v * delta).limit_length(JIG_MAX)
+
+
+# 腕脚の待機スウェイ＋攻撃時の前腕リーン（リグ方式のみ。legacyは _bones 空で無効）。
+func _animate_limbs(lean_rot: float) -> void:
+	if _bones.is_empty():
+		return
+	var sway := sin(_t * 1.4)
+	_set_bone_rot("shoulder_l", deg_to_rad(7.0 + sway * 4.0) + lean_rot)
+	_set_bone_rot("shoulder_r", deg_to_rad(-7.0 - sway * 4.0))
+	_set_bone_rot("elbow_l", deg_to_rad(sway * 3.0))
+	_set_bone_rot("elbow_r", deg_to_rad(-sway * 3.0))
+	_set_bone_rot("thigh_l", deg_to_rad(sway * 2.0))
+	_set_bone_rot("thigh_r", deg_to_rad(-sway * 2.0))
+
+
+func _set_bone_rot(name: String, r: float) -> void:
+	if _bones.has(name):
+		_bones[name].rotation = r
+
+
+# 親が子より先に来るボーン順（トポロジカル）。
+func _topo_order(bones_def: Dictionary) -> Array:
+	var order: Array = []
+	var added := {}
+	while order.size() < bones_def.size():
+		var progressed := false
+		for name in bones_def:
+			if added.has(name):
+				continue
+			var parent: Variant = bones_def[name].get("parent", null)
+			if parent == null or added.has(parent):
+				order.append(name)
+				added[name] = true
+				progressed = true
+		if not progressed:
+			break   # 不正な親参照（循環/欠落）で無限ループ回避
+	return order
 
 
 # --- 構築ヘルパ ---------------------------------------------------------
@@ -169,7 +283,10 @@ func _make_sprite(bone: Node2D, dir: String, part: Dictionary, bone_anchor: Vect
 
 
 func _load_meta(dir: String) -> Dictionary:
-	var path := dir + "parts.json"
+	return _load_json(dir + "parts.json")
+
+
+func _load_json(path: String) -> Dictionary:
 	if not FileAccess.file_exists(path):
 		return {}
 	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))

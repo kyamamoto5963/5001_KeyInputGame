@@ -1,0 +1,13 @@
+{
+  "slot": "hand_l",
+  "attach": "wrist_l",
+  "anchor": [
+    9,
+    9
+  ],
+  "z": 72,
+  "size": [
+    19,
+    19
+  ]
+}

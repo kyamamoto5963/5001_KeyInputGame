@@ -1,0 +1,13 @@
+{
+  "slot": "bust",
+  "attach": "chest",
+  "anchor": [
+    25,
+    -2
+  ],
+  "z": 42,
+  "size": [
+    51,
+    25
+  ]
+}

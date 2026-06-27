@@ -1,0 +1,13 @@
+{
+  "slot": "leg_thigh_r",
+  "attach": "thigh_r",
+  "anchor": [
+    12,
+    10
+  ],
+  "z": 10,
+  "size": [
+    23,
+    81
+  ]
+}

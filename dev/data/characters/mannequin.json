@@ -1,0 +1,28 @@
+{
+  "id": "mannequin",
+  "skeleton": "humanoid_v1",
+  "art_facing": 1,
+  "parts": {
+    "body": "base",
+    "lower": "skirt",
+    "upper": "tunic",
+    "bust": "bust",
+    "hair_back": "hair_b",
+    "head": "face",
+    "hair_front": "bangs",
+    "hat": "hat",
+    "arm_upper_r": "ua_r",
+    "arm_fore_r": "fa_r",
+    "hand_r": "hand_r",
+    "arm_upper_l": "ua_l",
+    "arm_fore_l": "fa_l",
+    "hand_l": "hand_l",
+    "leg_thigh_r": "th_r",
+    "leg_shin_r": "sh_r",
+    "foot_r": "foot_r",
+    "leg_thigh_l": "th_l",
+    "leg_shin_l": "sh_l",
+    "foot_l": "foot_l"
+  },
+  "tint": {}
+}

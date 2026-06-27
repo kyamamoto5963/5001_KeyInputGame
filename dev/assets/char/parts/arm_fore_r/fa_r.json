@@ -1,0 +1,13 @@
+{
+  "slot": "arm_fore_r",
+  "attach": "elbow_r",
+  "anchor": [
+    8,
+    6
+  ],
+  "z": 25,
+  "size": [
+    15,
+    53
+  ]
+}

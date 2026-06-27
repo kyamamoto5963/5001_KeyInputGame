@@ -1,0 +1,13 @@
+{
+  "slot": "foot_l",
+  "attach": "ankle_l",
+  "anchor": [
+    9,
+    4
+  ],
+  "z": 46,
+  "size": [
+    24,
+    17
+  ]
+}

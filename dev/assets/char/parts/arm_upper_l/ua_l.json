@@ -1,0 +1,13 @@
+{
+  "slot": "arm_upper_l",
+  "attach": "shoulder_l",
+  "anchor": [
+    8,
+    8
+  ],
+  "z": 70,
+  "size": [
+    23,
+    61
+  ]
+}

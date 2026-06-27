@@ -1,0 +1,13 @@
+{
+  "slot": "hair_back",
+  "attach": "head",
+  "anchor": [
+    30,
+    30
+  ],
+  "z": 5,
+  "size": [
+    61,
+    61
+  ]
+}

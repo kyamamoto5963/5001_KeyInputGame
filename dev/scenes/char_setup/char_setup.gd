@@ -11,9 +11,11 @@ extends Node2D
 ##   [ / ]     : 表示倍率 −／＋
 ##   r         : 自動フィット倍率に戻す
 
+const SKELETON := "res://assets/char/skeletons/humanoid_v1.json"
 const CHARS := [
-	"res://assets/char/char_001/",
-	"res://assets/char/char_002/",
+	{"name": "mannequin(rig)", "type": "rig", "src": "res://data/characters/mannequin.json"},
+	{"name": "char_001", "type": "legacy", "src": "res://assets/char/char_001/"},
+	{"name": "char_002", "type": "legacy", "src": "res://assets/char/char_002/"},
 ]
 
 var _char: CutoutCharacter
@@ -37,7 +39,11 @@ func _load_char(idx: int) -> void:
 	_char.z_index = -1            # キャラを背面へ。ボーン・ギズモ(self の _draw)を前面に。
 	_char.z_as_relative = false
 	add_child(_char)
-	_char.build(CHARS[_idx], 1.0)
+	var entry: Dictionary = CHARS[_idx]
+	if entry["type"] == "rig":
+		_char.build_rig(SKELETON, entry["src"], 1.0)
+	else:
+		_char.build(entry["src"], 1.0)
 	_facing = 1
 	_char.set_facing(_facing)
 	_fit_scale()
@@ -97,8 +103,8 @@ func _draw() -> void:
 
 func _update_label() -> void:
 	var face_txt := "右" if _facing > 0 else "左"
-	var cname := String(CHARS[_idx]).trim_suffix("/").get_file()
-	_info.text = "カットアウト・キャラ セットアップ（%s / 頭・胴・スカートの3パーツ）\n" % cname \
+	var cname := str(CHARS[_idx]["name"])
+	_info.text = "カットアウト・キャラ セットアップ（%s）\n" % cname \
 		+ "向き:%s  倍率:%.2fx  ボーン:%s\n" % [face_txt, _scale, "表示" if _show_bones else "非表示"] \
 		+ "n:キャラ切替  Space/a:モーション  b:ボーン  f:向き反転  [ ]:倍率  r:フィット"
 
