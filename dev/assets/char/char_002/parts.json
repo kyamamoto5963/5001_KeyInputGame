@@ -1,6 +1,6 @@
 {
   "source": "char_002.png (resized 1/4 -> 256x384)",
-  "art_facing": 1,
+  "art_facing": -1,
   "canvas": [
     256,
     384

@@ -47,9 +47,9 @@ func build(dir := DEFAULT_DIR, scale := 2.0) -> bool:
 		push_error("parts.json を読めません: " + dir)
 		return false
 
-	_art_facing = signi(int(meta.get("art_facing", 1)))   # 既定=右向き（本チャンデータ）
+	_art_facing = signi(int(meta.get("art_facing", -1)))   # 既定=向かって左向き（標準の作画向き）
 	if _art_facing == 0:
-		_art_facing = 1
+		_art_facing = -1
 	var j: Dictionary = meta["joints"]
 	_joints = {
 		"neck": _v2(j["neck"]),
@@ -92,9 +92,9 @@ func build_rig(skeleton_path: String, character_path: String, scale := 1.0) -> b
 		push_error("skeleton/character を読めません: %s / %s" % [skeleton_path, character_path])
 		return false
 
-	_art_facing = signi(int(char.get("art_facing", 1)))
+	_art_facing = signi(int(char.get("art_facing", -1)))   # 既定=向かって左向き
 	if _art_facing == 0:
-		_art_facing = 1
+		_art_facing = -1
 	var bones_def: Dictionary = skel["bones"]
 	var slots_def: Dictionary = skel.get("slots", {})
 	var feet_pos := _v2(bones_def["feet"]["pos"])
@@ -183,6 +183,11 @@ func _apply_limb_depth() -> void:
 ## 原画の全高(px・未スケール)。足元〜最上部パーツ。表示倍率の自動フィットに使う。
 func content_height() -> float:
 	return maxf(1.0, _joints["feet"].y - _content_top)
+
+
+## 原画が向いている方向(+1=右 / -1=左)。プレビューでネイティブ表示したい時に使う。
+func art_facing() -> int:
+	return _art_facing
 
 
 func set_facing(f: int) -> void:

@@ -24,7 +24,7 @@
 
 | 項目 | 規定 |
 |---|---|
-| ビュー | **3/4 右向き**（本チャン右向き＝`art_facing` 補正なし） |
+| ビュー | **3/4 向かって左向き**（標準。`art_facing=-1` 既定／flip前 char_002 の向き）。作画しやすさ優先 |
 | ポーズ | **バインドポーズ**：直立・安静、腕は下げ、肘膝を軽く曲げる。動的ポーズ禁止 |
 | ライティング | **均一フラット**。差し込み影／接地影／強いリムライト禁止（動くと破綻） |
 | 背景 | **透過**（RGBA）。縁の白ハロー禁止。キー抜き運用なら単色(マゼンタ/緑)可 |
@@ -94,7 +94,7 @@
 ### 5.1 共通ポジ（毎回貼る）
 ```
 Single game asset part of ONE consistent character, anime cel-shaded style,
-3/4 view facing right, neutral bind pose, isolated on transparent background,
+3/4 view facing left, neutral bind pose, isolated on transparent background,
 flat even frontal lighting, NO cast shadow, NO ground shadow, NO rim light,
 uniform palette, consistent line weight, crisp edges, drawn in resting orientation,
 small overlap margin at each joint end. Match the reference sheet exactly.

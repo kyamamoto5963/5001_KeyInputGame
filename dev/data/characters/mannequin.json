@@ -1,7 +1,7 @@
 {
   "id": "mannequin",
   "skeleton": "humanoid_v1",
-  "art_facing": 1,
+  "art_facing": -1,
   "parts": {
     "body": "base",
     "lower": "skirt",

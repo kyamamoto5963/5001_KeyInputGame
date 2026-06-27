@@ -44,7 +44,7 @@ func _load_char(idx: int) -> void:
 		_char.build_rig(SKELETON, entry["src"], 1.0)
 	else:
 		_char.build(entry["src"], 1.0)
-	_facing = 1
+	_facing = _char.art_facing()   # 既定は素材のネイティブ向き（標準＝向かって左）で表示
 	_char.set_facing(_facing)
 	_fit_scale()
 	_place_char()
