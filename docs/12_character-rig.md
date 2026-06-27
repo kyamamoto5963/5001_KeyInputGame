@@ -121,13 +121,15 @@ hip (root)
 ### 3.1 ファイル配置・命名
 ```
 dev/assets/char/parts/<slot>/<id>.png        # bbox密着クロップ済みPNG。例 upper/coat_witch.png
-dev/assets/char/parts/<slot>/<id>.json       # { slot, attach, anchor:[x,y], z, (size) }
+dev/assets/char/parts/<slot>/<id>.json       # { slot, attach, anchor:[x,y], z, (size), (gen) }
 dev/assets/char/skeletons/humanoid_v1.json   # スケルトン定義（§1）
 dev/data/characters/<name>.tres|json         # キャラデータ（§4）
 ```
 - `id` は slot を含めず短く（slot はフォルダで分かる）。例 `coat_witch`, `skirt_witch`, `brown_bangs`, `hat_navy`。
 - パーツ json の `anchor` は bake が自動で入れる（テンプレ由来）。`attach`/`z` は slot 既定から継承可（差分だけ書く）。
+- 任意 `gen`（生成プロンプト/seed/model/style版）を保存可＝再生成・画風更新に使う。runtimeは無視（→ 13_ai-asset-spec.md §6）。
 - **現 `parts.json` との関係**: 既存は `offset`（＝クロップ左上）と `joints` を持つので `anchor = joint − offset` で**ほぼA形式に変換可**。
+- **生成側の規格**（ポーズ/ライティング/シート/切り出し/プロンプト）は [13_ai-asset-spec.md](13_ai-asset-spec.md) を正本とする。
 
 ---
 
