@@ -23,6 +23,7 @@ var _chest: Node2D
 var _neck: Node2D
 var _chest_rest := Vector2.ZERO         # 胸ボーンの基準位置（揺れはここからのオフセット）
 var _bones := {}                        # リグ方式: name -> Node2D（legacyでは空）
+var _limb_pairs := []                    # facingで前後入れ替える左右ペア [{r,l,far,near}]
 var _sprites := {}
 var _joints := {}                       # name -> 元キャンバス座標(Vector2)
 var _facing := 1                        # +1=右 / -1=左
@@ -148,8 +149,35 @@ func build_rig(skeleton_path: String, character_path: String, scale := 1.0) -> b
 		_sprites[slot] = s
 		_content_top = min(_content_top, _v2(bones_def[attach]["pos"]).y - anchor.y)
 
+	_build_limb_pairs()
+	_apply_limb_depth()
 	_built = true
 	return true
+
+
+# 左右の腕脚を前後ペアとして登録（facing反転で z を入れ替えるため）。
+func _build_limb_pairs() -> void:
+	_limb_pairs = []
+	for base in ["arm_upper", "arm_fore", "hand", "leg_thigh", "leg_shin", "foot"]:
+		var sr: Sprite2D = _sprites.get(base + "_r")
+		var sl: Sprite2D = _sprites.get(base + "_l")
+		if sr != null and sl != null:
+			_limb_pairs.append({
+				"r": sr, "l": sl,
+				"far": mini(sr.z_index, sl.z_index),   # 奥
+				"near": maxi(sr.z_index, sl.z_index),   # 手前
+			})
+
+
+# キャラが向いている側の腕脚を手前に（振り返り＝前後入れ替え）。
+func _apply_limb_depth() -> void:
+	for p in _limb_pairs:
+		if _facing > 0:
+			p["r"].z_index = p["far"]
+			p["l"].z_index = p["near"]
+		else:
+			p["r"].z_index = p["near"]
+			p["l"].z_index = p["far"]
 
 
 ## 原画の全高(px・未スケール)。足元〜最上部パーツ。表示倍率の自動フィットに使う。
@@ -162,6 +190,7 @@ func set_facing(f: int) -> void:
 		_facing = signi(f)
 	if _built:
 		_apply_rig_transform()
+		_apply_limb_depth()
 
 
 func set_display_scale(s: float) -> void:
