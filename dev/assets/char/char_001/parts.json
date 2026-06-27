@@ -1,0 +1,58 @@
+{
+  "source": "char_001_256x256.png",
+  "art_facing": -1,
+  "canvas": [
+    256,
+    256
+  ],
+  "parts": [
+    {
+      "name": "head",
+      "offset": [
+        113,
+        9
+      ],
+      "size": [
+        39,
+        45
+      ]
+    },
+    {
+      "name": "torso",
+      "offset": [
+        91,
+        49
+      ],
+      "size": [
+        77,
+        94
+      ]
+    },
+    {
+      "name": "skirt",
+      "offset": [
+        91,
+        137
+      ],
+      "size": [
+        84,
+        114
+      ]
+    }
+  ],
+  "joints": {
+    "neck": [
+      133,
+      52
+    ],
+    "waist": [
+      133,
+      140
+    ],
+    "feet": [
+      133,
+      251
+    ],
+    "center_x": 133
+  }
+}

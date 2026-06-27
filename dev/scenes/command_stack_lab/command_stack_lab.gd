@@ -13,6 +13,8 @@ extends Node2D
 
 const CELL_PX := 64
 const ORIGIN := Vector2(48, 180)
+const CHAR_DIR := "res://assets/char/char_001/"
+const CHAR_SCALE := 0.42       # 256px原画をセルに合わせる表示倍率
 const MOVE_STEPS := 3          # 仮（メンバー固有の move_steps）
 const MOVE_TIME := 0.5         # 0.5秒/マス（要調整）
 const FACE_BEAT := 0.15        # 方向転換の見せ間
@@ -20,7 +22,6 @@ const SKILL_FLASH := 0.4       # スキル発動マーカーの表示時間
 
 const COL_GRID_FILL := Color(0.12, 0.13, 0.16)
 const COL_GRID_LINE := Color(0.30, 0.32, 0.38)
-const COL_CHAR := Color(0.40, 0.70, 1.0)
 const COL_MOVE := Color(0.30, 0.60, 1.0)   # 青: 移動カーソル
 const COL_FACE := Color(1.0, 0.85, 0.20)   # 黄: 方向転換
 const COL_SKILL := Color(1.0, 0.30, 0.30)  # 赤: スキル照準
@@ -38,6 +39,7 @@ var _skill_dir := Vector2i(1, 0)
 var _skill_flash_t := 0.0
 var _skill_flash_cell := Vector2i.ZERO
 var _hint := ""
+var _char: CutoutCharacter
 
 @onready var _info: Label = $UI/Info
 @onready var _stack_label: Label = $UI/Stack
@@ -45,12 +47,20 @@ var _hint := ""
 
 func _ready() -> void:
 	_char_px = _cell_to_px(_char_cell)
+	_char = CutoutCharacter.new()
+	add_child(_char)
+	_char.build(CHAR_DIR, CHAR_SCALE)
+	_char.set_facing(_facing)
 	_recompute()
 
 
 func _process(delta: float) -> void:
 	if _skill_flash_t > 0.0:
 		_skill_flash_t -= delta
+	# キャラ本体は CutoutCharacter ノードを足元位置に追従させる（_draw の四角は撤去）。
+	var base_px := _char_px if _phase == Phase.EXECUTING else _cell_to_px(_char_cell)
+	_char.position = base_px + Vector2(CELL_PX * 0.5, CELL_PX * 0.9)
+	_char.set_facing(_facing)
 	queue_redraw()
 	_update_labels()
 
@@ -168,6 +178,8 @@ func _walk(dir: Vector2i) -> void:
 
 
 func _fire(cell: Vector2i) -> void:
+	if _char != null:
+		_char.play_attack()
 	_skill_flash_cell = cell
 	_skill_flash_t = SKILL_FLASH
 	await get_tree().create_timer(SKILL_FLASH).timeout
@@ -243,8 +255,7 @@ func _draw() -> void:
 	if _phase != Phase.EXECUTING:
 		_draw_path()
 
-	var char_px := _char_px if _phase == Phase.EXECUTING else _cell_to_px(_char_cell)
-	_draw_char(char_px)
+	# キャラは CutoutCharacter ノードが描画する（_process で足元位置を追従）。
 
 	match _phase:
 		Phase.MOVE:
@@ -273,13 +284,6 @@ func _draw_path() -> void:
 		draw_line(pts[i - 1], pts[i], Color(COL_MOVE, 0.5), 2.0)
 	for p in pts:
 		draw_circle(p, 4.0, Color(COL_MOVE, 0.6))
-
-
-func _draw_char(px: Vector2) -> void:
-	var m := 8.0
-	draw_rect(Rect2(px + Vector2(m, m), Vector2(CELL_PX - 2.0 * m, CELL_PX - 2.0 * m)), COL_CHAR, true)
-	var eye_x := px.x + (CELL_PX - m - 6.0 if _facing > 0 else m + 2.0)
-	draw_rect(Rect2(eye_x, px.y + m + 4.0, 4.0, 4.0), Color.BLACK, true)
 
 
 func _draw_cursor(cell: Vector2i, col: Color) -> void:
