@@ -1,0 +1,52 @@
+{
+  "face": {
+    "cols": 3,
+    "rows": 3,
+    "cell": 384,
+    "margin": 28,
+    "gutter": 24,
+    "joint_cell": [
+      192,
+      110
+    ],
+    "slot": "head",
+    "use": "顔(ハゲ頭に目/表情)"
+  },
+  "hair": {
+    "cols": 3,
+    "rows": 3,
+    "cell": 384,
+    "margin": 28,
+    "gutter": 24,
+    "joint_cell": [
+      192,
+      110
+    ],
+    "slot_options": [
+      "hair_front",
+      "hair_back"
+    ],
+    "use": "髪(参照頭に被せる)"
+  },
+  "limb": {
+    "cols": 4,
+    "rows": 4,
+    "cell": 282,
+    "margin": 28,
+    "gutter": 24,
+    "joint_cell": [
+      141,
+      40
+    ],
+    "slot_options": [
+      "arm_upper_*",
+      "arm_fore_*",
+      "hand_*",
+      "leg_thigh_*",
+      "leg_shin_*",
+      "foot_*"
+    ],
+    "use": "四肢/手足(縦ガイドに沿って)"
+  },
+  "note": "big parts(upper/lower)はbody templateを使い1〜2/枚で生成。bakeはcols/rows/cell/margin/gutterでセル切り→bboxクロップ→anchor=joint_cell−クロップ左上。"
+}
