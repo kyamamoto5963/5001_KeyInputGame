@@ -43,6 +43,7 @@
 |---|---|---|---|
 | `head`（素顔） | ハゲ頭＋肌＋耳＋首stub。**髪は描かない** | 首stubを下に伸ばす | 全顔が頭テンプレに一致（§3.2） |
 | `hair_front` | 前髪・顔まわりの房のみ | 生え際で頭に被せる | 透過 |
+| `hair_side_l/r` | 左右サイドの房（耳横〜ツインテ/サイドテール） | こめかみ〜耳横で頭に被せる | 透過・任意 |
 | `hair_back` | 後ろ髪の塊のみ | 後頭部で被せる | 透過 |
 | `hat` | 被り物のみ | 頭頂にフィット | 透過 |
 | `upper` | 肩〜腰の上衣。**腕は含めない** | 肩/腰を少し越える | 首穴を開ける |
@@ -106,6 +107,7 @@ small overlap margin at each joint end. Match the reference sheet exactly.
 |---|---|
 | head | `bald head + face only, short neck stub, no hair` |
 | hair_front | `front bangs only, fit the reference head, hair only` |
+| hair_side_l/r | `side hair lock only (sidelock/twintail base), hair only` |
 | hair_back | `back hair mass only, hanging, hair only` |
 | upper | `torso garment shoulders→waist, NO arms, neck hole` |
 | lower | `skirt/coat-skirt waist down, spread` |
